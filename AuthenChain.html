@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuthenChain - Ultimate Live Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* =========================================
+           GLOBAL & THEME VARIABLES
+           ========================================= */
+        :root {
+            /* DARK THEME (Default) */
+            --bg-body: #0b1120; 
+            --bg-sidebar: #131b2f;
+            --bg-card: #1a233a;
+            --text-main: #FFFFFF;
+            --text-muted: #94a3b8;
+            --accent-blue: #00f0ff;
+            --accent-purple: #b026ff;
+            --accent-green: #00ff66;
+            --accent-red: #ff007f;
+            --accent-yellow: #ffea00;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            --dropdown-bg: #1e293b;
+        }
+
+        [data-theme="light"] {
+            /* LIGHT THEME */
+            --bg-body: #f1f5f9;
+            --bg-sidebar: #ffffff;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --accent-blue: #2563eb;
+            --accent-purple: #7c3aed;
+            --accent-green: #059669;
+            --accent-red: #e11d48;
+            --accent-yellow: #d97706;
+            --border-color: rgba(0, 0, 0, 0.08);
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            --dropdown-bg: #ffffff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
+        body { height: 100vh; overflow: hidden; background-color: var(--bg-body); color: var(--text-main); transition: background-color 0.3s ease, color 0.3s ease; }
+        .hidden { display: none !important; }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-purple); }
+
+        /* RGB Click Animation */
+        @keyframes sectionRgbGlow {
+            0% { box-shadow: 0 0 15px #ff0000, inset 0 0 10px #ff0000; border-color: #ff0000; }
+            33% { box-shadow: 0 0 15px #00ff00, inset 0 0 10px #00ff00; border-color: #00ff00; }
+            66% { box-shadow: 0 0 15px #0000ff, inset 0 0 10px #0000ff; border-color: #0000ff; }
+            100% { box-shadow: 0 0 0 transparent; border-color: var(--border-color); }
+        }
+        .rgb-active { animation: sectionRgbGlow 0.8s ease-out; }
+
+        /* =========================================
+           LOGIN VIEW
+           ========================================= */
+        #login-view {
+            display: flex; width: 100%; height: 100vh; background-color: #0b1120;
+            background-image: radial-gradient(circle at top right, rgba(0, 240, 255, 0.1), transparent 40%), radial-gradient(circle at bottom left, rgba(176, 38, 255, 0.1), transparent 40%);
+            justify-content: center; align-items: center; position: absolute; top: 0; left: 0; z-index: 100; animation: fadeIn 0.5s ease;
+        }
+        .login-wrapper { display: flex; width: 90%; max-width: 1000px; background: #131b2f; border-radius: 20px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.05); }
+        .login-left { flex: 1; padding: 50px; display: flex; flex-direction: column; justify-content: center; color: white; }
+        .login-left h1 { font-size: 24px; margin-bottom: 30px; text-align: center; }
+        .login-left h1 span { color: var(--accent-blue); font-weight: 700; text-shadow: 0 0 10px rgba(0,240,255,0.4); }
+        .input-group { margin-bottom: 20px; }
+        .input-group input { width: 100%; padding: 15px 20px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; transition: 0.3s; }
+        .input-group input:focus { outline: none; border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(0, 240, 255, 0.2); }
+        .form-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; font-size: 13px; color: #94a3b8; }
+        .login-btn { width: 100%; padding: 15px; background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue)); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.3s; margin-bottom: 25px; }
+        .login-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0, 240, 255, 0.3); }
+        .social-logins { display: flex; justify-content: center; gap: 15px; margin-top: 15px; }
+        .social-circle { width: 40px; height: 40px; border-radius: 50%; background: #0f172a; display: flex; justify-content: center; align-items: center; cursor: pointer; border: 1px solid #334155; transition: 0.3s; color: white; }
+        .social-circle:hover { background: var(--accent-blue); border-color: var(--accent-blue); }
+        .login-right { flex: 1; background: #0f172a; display: flex; justify-content: center; align-items: center; position: relative; }
+        .login-right video { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; mix-blend-mode: screen; }
+
+        /* =========================================
+           DASHBOARD LAYOUT & RGB PROFILE
+           ========================================= */
+        #dashboard-layout { display: flex; width: 100%; height: 100vh; background-color: var(--bg-body); animation: fadeIn 0.5s ease; }
+        
+        .sidebar { width: 260px; background-color: var(--bg-sidebar); display: flex; flex-direction: column; border-right: 1px solid var(--border-color); z-index: 10; transition: 0.3s; }
+        .brand { padding: 30px; display: flex; align-items: center; gap: 15px; font-size: 22px; font-weight: 700; }
+        .brand i { color: var(--accent-red); }
+        
+        .user-profile { text-align: center; padding: 20px; border-bottom: 1px solid var(--border-color); margin-bottom: 10px; }
+        @keyframes rgbGlowProfile {
+            0% { box-shadow: 0 0 10px #ff0000, inset 0 0 10px #ff0000; border-color: #ff0000; }
+            33% { box-shadow: 0 0 10px #00ff00, inset 0 0 10px #00ff00; border-color: #00ff00; }
+            66% { box-shadow: 0 0 10px #0000ff, inset 0 0 10px #0000ff; border-color: #0000ff; }
+            100% { box-shadow: 0 0 10px #ff0000, inset 0 0 10px #ff0000; border-color: #ff0000; }
+        }
+        .profile-img-container { position: relative; width: 80px; height: 80px; margin: 0 auto 15px auto; cursor: pointer; }
+        .profile-img-container img { width: 100%; height: 100%; border-radius: 20px; object-fit: cover; border: 3px solid transparent; animation: rgbGlowProfile 3s linear infinite; transition: 0.3s; }
+        .profile-img-container .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); border-radius: 20px; display: flex; justify-content: center; align-items: center; opacity: 0; transition: 0.3s; color: white; }
+        .profile-img-container:hover .overlay { opacity: 1; }
+        .user-profile h3 { font-size: 15px; margin-bottom: 5px; }
+        .user-profile p { font-size: 12px; color: var(--text-muted); }
+
+        .nav-menu { list-style: none; padding: 0 15px; overflow-y: auto; flex-grow: 1; }
+        .nav-link { display: flex; align-items: center; padding: 14px 20px; color: var(--text-muted); text-decoration: none; border-radius: 12px; font-weight: 500; margin-bottom: 5px; transition: 0.3s; cursor: pointer; }
+        .nav-link i { width: 24px; margin-right: 10px; font-size: 18px; }
+        .nav-link:hover, .nav-link.active { background-color: var(--bg-card); color: var(--accent-blue); box-shadow: inset 4px 0 0 var(--accent-blue); }
+        .nav-link.ai-link { color: var(--accent-purple); text-shadow: 0 0 5px rgba(176, 38, 255, 0.5); font-weight: bold; }
+        .logout-btn { display: flex; align-items: center; padding: 14px 20px; color: var(--accent-red); background: none; border: none; border-radius: 12px; font-weight: 500; cursor: pointer; transition: 0.3s; width: calc(100% - 30px); margin: auto 15px 20px 15px; font-size: 15px; }
+        .logout-btn:hover { background-color: rgba(255, 0, 127, 0.1); }
+
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; overflow-y: auto; position: relative; }
+        
+        .topbar { height: 80px; padding: 0 40px; display: flex; align-items: center; justify-content: space-between; background: var(--bg-body); position: sticky; top: 0; z-index: 50; transition: 0.3s; border-bottom: 1px solid var(--border-color); }
+        .search-bar { background-color: var(--bg-card); padding: 12px 20px; border-radius: 20px; display: flex; align-items: center; width: 350px; border: 1px solid var(--border-color); transition: 0.3s; }
+        .search-bar:focus-within { border-color: var(--accent-blue); box-shadow: 0 0 10px rgba(0, 240, 255, 0.2); }
+        .search-bar input { background: transparent; border: none; color: var(--text-main); outline: none; margin-left: 10px; width: 100%; font-size: 14px; }
+        .topbar-right { display: flex; align-items: center; gap: 15px; position: relative; }
+        .icon-btn { background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-muted); width: 45px; height: 45px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: 0.3s; position: relative; }
+        .icon-btn:hover { color: var(--text-main); transform: translateY(-2px); border-color: var(--accent-blue); }
+        .badge { position: absolute; top: -5px; right: -5px; background: var(--accent-red); color: white; font-size: 10px; padding: 3px 6px; border-radius: 50%; font-weight: bold; }
+
+        .dropdown-menu { position: absolute; top: 60px; right: 0; width: 320px; background: var(--dropdown-bg); border-radius: 15px; box-shadow: var(--shadow); border: 1px solid var(--border-color); padding: 10px; opacity: 0; visibility: hidden; transform: translateY(10px); transition: 0.3s; z-index: 100; }
+        .dropdown-menu.show { opacity: 1; visibility: visible; transform: translateY(0); }
+        .dropdown-header { padding: 10px; font-weight: 600; border-bottom: 1px solid var(--border-color); margin-bottom: 10px; }
+        .dropdown-item { padding: 12px; display: flex; gap: 15px; align-items: center; border-radius: 10px; cursor: pointer; transition: 0.2s; }
+        .dropdown-item:hover { background: rgba(176, 38, 255, 0.1); }
+        .dropdown-item img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        .dropdown-item-content h4 { font-size: 14px; margin-bottom: 3px; }
+        .dropdown-item-content p { font-size: 12px; color: var(--text-muted); }
+
+        .view-section { padding: 20px 40px 40px; display: none; animation: fadeIn 0.4s ease; }
+        .view-section.active { display: block; }
+        .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .header-actions h1 { font-size: 26px; }
+
+        /* --- DASHBOARD VIEW --- */
+        .portfolio-header { background: var(--bg-card); padding: 30px; border-radius: 20px; border: 1px solid var(--border-color); box-shadow: var(--shadow); margin-bottom: 30px; text-align: center; }
+        .portfolio-header h1 { font-size: 48px; color: var(--text-main); margin: 10px 0; text-shadow: 0 0 15px rgba(0,240,255,0.3); font-weight: 700;}
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background-color: var(--bg-card); padding: 25px; border-radius: 20px; border: 1px solid var(--border-color); box-shadow: var(--shadow); transition: 0.3s; cursor: pointer; }
+        .stat-card:hover { transform: translateY(-5px); border-color: var(--accent-blue); }
+        .stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 15px; color: #1a233a; }
+        .stat-card h2 { font-size: 22px; margin-bottom: 5px; }
+        .stat-card p { font-size: 13px; display: flex; align-items: center; gap: 5px; font-weight: 600; }
+        .charts-grid { display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 20px; }
+        .chart-card { background-color: var(--bg-card); padding: 25px; border-radius: 20px; border: 1px solid var(--border-color); box-shadow: var(--shadow); }
+        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-weight: 600; font-size: 16px; color: var(--accent-blue); }
+
+        /* --- MARKET PRICES TABLE VIEW --- */
+        .market-table-container { background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border-color); overflow: hidden; box-shadow: var(--shadow); }
+        .market-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .market-table th { padding: 20px; font-size: 13px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border-color); }
+        .market-table td { padding: 15px 20px; border-bottom: 1px solid var(--border-color); font-size: 15px; font-weight: 500; transition: background-color 0.3s; }
+        .market-table tr:hover { background: rgba(0, 240, 255, 0.05); }
+        @keyframes priceFlashUp { 0% { background-color: rgba(0, 255, 102, 0.3); } 100% { background-color: transparent; } }
+        @keyframes priceFlashDown { 0% { background-color: rgba(255, 0, 127, 0.3); } 100% { background-color: transparent; } }
+        .flash-up { animation: priceFlashUp 1s ease-out; }
+        .flash-down { animation: priceFlashDown 1s ease-out; }
+        .coin-cell { display: flex; align-items: center; gap: 12px; }
+        .coin-icon { width: 35px; height: 35px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 18px; color: white; }
+        .coin-symbol { color: var(--text-muted); font-size: 13px; margin-left: 5px; }
+        .trade-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--accent-blue); background: transparent; color: var(--accent-blue); cursor: pointer; font-weight: 600; transition: 0.3s; }
+        .trade-btn:hover { background: var(--accent-blue); color: #000; }
+
+        /* --- STATS ANALYSIS VIEW --- */
+        .analysis-controls { background: var(--bg-card); padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .crypto-selector { background: var(--dropdown-bg); color: var(--text-main); border: 1px solid var(--accent-blue); padding: 10px 20px; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; outline: none; }
+        .charts-grid-split { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 20px; }
+
+        /* --- AUTHENSHADOWS AI VIEW --- */
+        .chat-container { display: flex; flex-direction: column; height: 70vh; background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border-color); box-shadow: var(--shadow); overflow: hidden; }
+        .chat-messages { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; background: rgba(0,0,0,0.2); }
+        .msg { max-width: 75%; padding: 14px 18px; border-radius: 15px; font-size: 14px; line-height: 1.5; position: relative; }
+        .msg.user { align-self: flex-end; background: var(--accent-blue); color: #000; border-bottom-right-radius: 2px; font-weight: 500; }
+        .msg.ai-bot { align-self: flex-start; background: rgba(176, 38, 255, 0.15); border: 1px solid var(--accent-purple); color: var(--text-main); border-bottom-left-radius: 2px; box-shadow: 0 0 10px rgba(176,38,255,0.1); }
+        .msg.ai-bot i { color: var(--accent-purple); margin-right: 8px; }
+        .ai-suggestions { display: flex; gap: 10px; padding: 12px 20px; background: var(--bg-body); overflow-x: auto; border-top: 1px solid var(--border-color); scrollbar-width: none; }
+        .ai-suggestions::-webkit-scrollbar { display: none; }
+        .ai-chip { background: rgba(0, 240, 255, 0.1); border: 1px solid var(--accent-blue); color: var(--accent-blue); padding: 8px 15px; border-radius: 20px; font-size: 13px; cursor: pointer; white-space: nowrap; transition: 0.3s; }
+        .ai-chip:hover { background: var(--accent-blue); color: #000; box-shadow: 0 0 10px rgba(0, 240, 255, 0.4); }
+        .chat-input-area { display: flex; padding: 15px; background: var(--bg-card); border-top: 1px solid var(--border-color); }
+        .chat-input-area input { flex-grow: 1; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); outline: none; font-size: 15px; padding: 12px 20px; border-radius: 25px; transition: 0.3s; }
+        .chat-input-area input:focus { border-color: var(--accent-purple); box-shadow: 0 0 10px rgba(176, 38, 255, 0.3); }
+        .chat-send-btn { background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue)); border: none; color: white; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; transition: 0.2s; margin-left: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .chat-send-btn:hover { transform: scale(1.1); box-shadow: 0 0 15px rgba(0, 240, 255, 0.4); }
+
+        /* --- WALLET METAMASK VIEW --- */
+        .wallet-container { display: grid; grid-template-columns: 1fr 1.5fr; gap: 30px; margin-top: 20px; }
+
+        /* --- CRYPTO APPS VIEW --- */
+        .apps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 25px; }
+        .app-card { background: var(--bg-card); border-radius: 20px; padding: 30px; text-align: center; border: 1px solid var(--border-color); transition: 0.3s; }
+        .app-card:hover { transform: translateY(-5px); border-color: var(--accent-purple); box-shadow: 0 10px 30px rgba(176, 38, 255, 0.2); }
+        .app-logo { width: 70px; height: 70px; border-radius: 15px; margin: 0 auto 15px auto; display: flex; align-items: center; justify-content: center; font-size: 35px; color: white; }
+        .app-card h3 { margin-bottom: 10px; font-size: 18px; }
+        .app-card p { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; height: 40px; }
+        .app-btn { background: rgba(0, 240, 255, 0.1); color: var(--accent-blue); padding: 10px 20px; border-radius: 10px; border: none; font-weight: 600; width: 100%; cursor: pointer; transition: 0.2s; }
+        .app-btn:hover { background: var(--accent-blue); color: #000; }
+
+        /* --- PREMIUM VIEW --- */
+        .pricing-grid { display: flex; gap: 30px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+        .price-card { background: var(--bg-card); border-radius: 20px; padding: 40px; width: 320px; border: 1px solid var(--border-color); display: flex; flex-direction: column; transition: 0.3s; position: relative; }
+        .price-card:hover { transform: translateY(-10px); }
+        .price-card.featured { border-color: var(--accent-purple); box-shadow: 0 10px 40px rgba(176, 38, 255, 0.2); transform: scale(1.05); }
+        .price-card.featured:hover { transform: scale(1.05) translateY(-10px); }
+        .badge-pro { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue)); color: white; padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; letter-spacing: 1px; }
+        .price-header { text-align: center; margin-bottom: 30px; border-bottom: 1px solid var(--border-color); padding-bottom: 30px; }
+        .price-header h3 { font-size: 20px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; }
+        .price-amount { font-size: 48px; font-weight: 700; color: var(--text-main); }
+        .price-amount span { font-size: 16px; color: var(--text-muted); font-weight: 400; }
+        .price-features { list-style: none; margin-bottom: 40px; flex-grow: 1; }
+        .price-features li { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; font-size: 14px; }
+        .price-features i { color: var(--accent-green); font-size: 16px; }
+        .price-btn { padding: 15px; border-radius: 12px; border: none; font-weight: 600; font-size: 16px; cursor: pointer; transition: 0.3s; width: 100%; }
+        .btn-outline { background: transparent; border: 2px solid var(--accent-blue); color: var(--accent-blue); }
+        .btn-outline:hover { background: var(--accent-blue); color: #000; }
+        .btn-filled { background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue)); color: white; }
+        .btn-filled:hover { box-shadow: 0 10px 20px rgba(176, 38, 255, 0.3); transform: translateY(-2px); }
+
+        /* --- ABOUT US VIEW --- */
+        .about-container { background: var(--bg-card); padding: 40px; border-radius: 20px; box-shadow: var(--shadow); border: 1px solid var(--border-color); max-width: 900px; margin: 0 auto; line-height: 1.8; }
+        .about-gif { display: block; margin: 0 auto 30px auto; max-width: 250px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .about-section { margin-bottom: 30px; }
+        .about-section h2 { color: var(--accent-blue); margin-bottom: 15px; display: flex; align-items: center; gap: 10px; font-size: 24px; }
+        .about-section h3 { color: var(--accent-purple); margin-bottom: 10px; font-size: 18px; }
+        .about-section p { margin-bottom: 15px; color: var(--text-muted); font-size: 15px; }
+        .about-list { list-style: none; padding-left: 10px; margin-bottom: 15px; }
+        .about-list li { margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px; color: var(--text-main); font-size: 15px; }
+        .leadership-box { background: rgba(0,0,0,0.2); padding: 25px; border-radius: 15px; margin-top: 20px; border: 1px solid var(--border-color); }
+        .leader-card { display: flex; align-items: center; gap: 20px; margin-top: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
+        .leader-card:last-child { border-bottom: none; padding-bottom: 0; }
+        .leader-img { width: 100px; height: 100px; border-radius: 15px; object-fit: cover; border: 2px solid var(--accent-blue); box-shadow: 0 5px 15px rgba(0,240,255,0.2); flex-shrink: 0; }
+        .leader-info h4 { color: var(--accent-blue); font-size: 18px; margin-bottom: 5px; }
+        .leader-info p { color: var(--text-muted); font-size: 14px; margin-bottom: 0; line-height: 1.6; }
+
+        /* --- MODAL OVERLAYS --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 1000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: 0.3s; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-box { background: var(--bg-card); padding: 40px; border-radius: 20px; text-align: center; max-width: 450px; width: 90%; border: 1px solid var(--border-color); box-shadow: 0 20px 50px rgba(0,0,0,0.5); position: relative; }
+        
+        .modal-title { font-size: 22px; margin-bottom: 20px; color: var(--text-main); }
+        .modal-subtitle { font-size: 14px; color: var(--text-muted); margin-bottom: 25px; }
+        
+        .pay-input { width: 100%; padding: 12px 15px; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 8px; margin-bottom: 15px; text-align: left; transition: 0.3s; }
+        .pay-input:focus { outline: none; border-color: var(--accent-blue); }
+        .pay-row { display: flex; gap: 15px; }
+        
+        .action-btn { background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue)); color: white; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%; font-size: 16px; transition: 0.3s; margin-top: 10px; }
+        .action-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0, 240, 255, 0.3); }
+        .cancel-btn { background: transparent; color: var(--text-muted); border: none; margin-top: 15px; cursor: pointer; text-decoration: underline; }
+
+        .spinner { width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.1); border-top-color: var(--accent-blue); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px auto; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .status-icon { font-size: 60px; margin-bottom: 15px; display: none; }
+        .status-icon.success { color: var(--accent-green); animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .status-icon.fail { color: var(--accent-red); animation: shake 0.5s; }
+        
+        @keyframes popIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 50% { transform: translateX(10px); } 75% { transform: translateX(-10px); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .trade-stat-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; }
+        .trade-warning { background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--accent-red); padding: 12px; margin-bottom: 20px; text-align: left; font-size: 12px; color: var(--text-muted); border-radius: 0 8px 8px 0; }
+    </style>
+</head>
+<body>
+
+    <div id="login-view">
+        <div class="login-wrapper">
+            <div class="login-left">
+                <h1>Login to <span>AuthenChain</span></h1>
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="input-group">
+                        <input type="text" id="email" placeholder="Email Address / User ID" required>
+                    </div>
+                    <div class="input-group">
+                        <input type="password" id="password" placeholder="Password" required>
+                    </div>
+                    <div class="form-actions">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" class="click-sound"> Remember Me
+                        </label>
+                        <a href="#" class="click-sound" style="color: var(--accent-blue); text-decoration: none;">Forgot Password?</a>
+                    </div>
+                    <button type="submit" class="login-btn click-sound">Login to Dashboard</button>
+                </form>
+                <div style="text-align: center; color: var(--text-muted); margin: 10px 0;">or Sign In with</div>
+                <div class="social-logins">
+                    <div class="social-circle click-sound"><i class="fa-brands fa-google" style="color: #ea4335;"></i></div>
+                    <div class="social-circle click-sound"><i class="fa-brands fa-apple"></i></div>
+                    <div class="social-circle click-sound"><i class="fa-brands fa-microsoft" style="color: #00a4ef;"></i></div>
+                </div>
+            </div>
+            <div class="login-right">
+                <video src="man-invest-secure-bitcoin-animation-gif-download-5629103.mp4" autoplay loop muted playsinline></video>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="payment-modal">
+        <div class="modal-box">
+            <div id="pay-step-1">
+                <h2 class="modal-title">Secure Checkout</h2>
+                <p class="modal-subtitle">Selected Plan: <strong id="checkout-plan-name" style="color: var(--accent-blue);">Plan</strong> (<span id="checkout-plan-price"></span>)</p>
+                <input type="text" class="pay-input click-sound" placeholder="Cardholder Name" required>
+                <input type="text" class="pay-input click-sound" placeholder="Card Number (0000 0000 0000 0000)" required>
+                <div class="pay-row">
+                    <input type="text" class="pay-input click-sound" placeholder="MM/YY" required>
+                    <input type="text" class="pay-input click-sound" placeholder="CVV" required>
+                </div>
+                <button class="action-btn click-sound" onclick="processCardDetails()">Pay via Secure Transaction</button>
+                <button class="cancel-btn click-sound" onclick="closePaymentModal()">Cancel</button>
+            </div>
+            <div id="pay-step-otp" style="display: none;">
+                <h2 class="modal-title">Verify Transaction</h2>
+                <p class="modal-subtitle">An OTP has been sent to your registered mobile number for security.</p>
+                <input type="text" class="pay-input click-sound" style="text-align: center; font-size: 20px; letter-spacing: 5px;" placeholder="• • • • • •" maxlength="6">
+                <button class="action-btn click-sound" onclick="verifyOTP()">Submit OTP</button>
+                <button class="cancel-btn click-sound" onclick="closePaymentModal()">Cancel</button>
+            </div>
+            <div id="pay-step-processing" style="display: none;">
+                <div class="spinner"></div>
+                <h2 class="modal-title">Confirming Transaction...</h2>
+                <p class="modal-subtitle">Connecting to banking gateway. Please do not close this window.</p>
+            </div>
+            <div id="pay-step-success" style="display: none;">
+                <i class="fa-solid fa-circle-check status-icon success" id="icon-success"></i>
+                <h2 class="modal-title" style="color: var(--accent-green);">Payment Successful!</h2>
+                <p class="modal-subtitle" style="font-size: 16px; color: var(--text-main); font-weight: 500;">Thanks for taking this We are ready to deploy and standby your orders, Sir/Mam.</p>
+                <button class="action-btn click-sound" onclick="closePaymentModal()" style="margin-top: 20px;">Return to Dashboard</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="trade-modal">
+        <div class="modal-box" style="max-width: 480px;">
+            <div id="trade-step-details">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 25px;">
+                    <div id="tm-icon" class="coin-icon" style="width: 50px; height: 50px; font-size: 24px;"></div>
+                    <div style="text-align: left;">
+                        <h2 id="tm-name" style="margin:0; font-size: 22px;">Coin</h2>
+                        <span id="tm-symbol" style="color: var(--text-muted); font-size: 14px;">SYM</span>
+                    </div>
+                </div>
+                
+                <div style="background: var(--bg-body); padding: 15px 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border-color);">
+                    <div class="trade-stat-row">
+                        <span style="color: var(--text-muted);">Current Market Price:</span>
+                        <strong id="tm-price" style="color: var(--text-main); font-size: 16px;">$0.00</strong>
+                    </div>
+                    <div class="trade-stat-row">
+                        <span style="color: var(--text-muted);">24h Profit/Loss:</span>
+                        <strong id="tm-change">0.00%</strong>
+                    </div>
+                    <div class="trade-stat-row">
+                        <span style="color: var(--text-muted);">Market Cap:</span>
+                        <strong id="tm-mcap" style="color: var(--text-main);">0</strong>
+                    </div>
+                    <div class="trade-stat-row" style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border-color);">
+                        <span style="color: var(--text-muted);">Available USD Balance:</span>
+                        <strong id="tm-balance" style="color: var(--accent-green);">$0.00</strong>
+                    </div>
+                </div>
+
+                <div class="trade-warning">
+                    <strong style="color: var(--accent-red); display: block; margin-bottom: 5px;">⚠️ Trading Disclaimer</strong>
+                    Cryptocurrency trading involves significant risk and can result in the loss of your invested capital. Market prices are volatile. Proceed only if you understand the risks.
+                </div>
+
+                <div style="text-align: left; margin-bottom: 25px;">
+                    <label style="display: block; color: var(--text-muted); font-size: 13px; margin-bottom: 8px;">Amount to Trade (USD)</label>
+                    <input type="number" id="trade-amount-input" class="pay-input click-sound" placeholder="e.g. 500" min="1" oninput="calculateTradeShares()">
+                    <div style="font-size: 13px; color: var(--text-muted); margin-top: 8px; text-align: right;">
+                        You will receive approx: <strong id="trade-estimate" style="color: var(--accent-blue); font-size: 15px;">0.00000</strong> <span id="tm-symbol-est">SYM</span> shares
+                    </div>
+                </div>
+
+                <button class="action-btn click-sound" onclick="executeTradeProcess()">Proceed to Trade</button>
+                <button class="cancel-btn click-sound" onclick="closeTradeModal()">Cancel Transaction</button>
+            </div>
+
+            <div id="trade-step-processing" style="display: none;">
+                <div class="spinner"></div>
+                <h2 class="modal-title">Executing Trade...</h2>
+                <p class="modal-subtitle">Writing transaction to the blockchain ecosystem. Please wait.</p>
+            </div>
+
+            <div id="trade-step-success" style="display: none;">
+                <i class="fa-solid fa-circle-check status-icon success" id="trade-icon-success"></i>
+                <h2 class="modal-title" style="color: var(--accent-green);">Trade Successfully Executed!</h2>
+                <p class="modal-subtitle" style="font-size: 15px; color: var(--text-main);">Your portfolio has been updated with the newly acquired digital assets.</p>
+                <button class="action-btn click-sound" onclick="closeTradeModal()" style="margin-top: 20px;">Return to Market</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboard-layout" class="hidden">
+        
+        <aside class="sidebar">
+            <div class="brand">
+                <i class="fa-solid fa-cube"></i> AuthenChain
+            </div>
+            
+            <div class="user-profile rgb-section click-sound">
+                <input type="file" id="profile-upload" style="display: none;" accept="image/*">
+                <div class="profile-img-container" onclick="document.getElementById('profile-upload').click()">
+                    <img src="https://i.pravatar.cc/150?img=11" id="profile-pic" alt="User Profile">
+                    <div class="overlay"><i class="fa-solid fa-camera"></i></div>
+                </div>
+                <h3 id="userDisplayName">Ashirbad Biswal</h3>
+                <p id="userDisplayEmail">student@university.edu</p>
+            </div>
+
+            <ul class="nav-menu">
+                <li><a class="nav-link active click-sound rgb-section" onclick="switchTab('view-dashboard', this)"><i class="fa-solid fa-border-all"></i> Dashboard Overview</a></li>
+                <li><a class="nav-link click-sound rgb-section" onclick="switchTab('view-market', this)"><i class="fa-solid fa-chart-line"></i> Market Prices</a></li>
+                <li><a class="nav-link click-sound rgb-section" onclick="switchTab('view-stats', this)"><i class="fa-solid fa-chart-pie"></i> Stats Analysis</a></li>
+                <li><a class="nav-link click-sound rgb-section" onclick="switchTab('view-wallet', this)"><i class="fa-brands fa-ethereum"></i> Wallet (MetaMask)</a></li>
+                <li><a class="nav-link click-sound rgb-section" onclick="switchTab('view-apps', this)"><i class="fa-solid fa-layer-group"></i> Crypto Apps</a></li>
+                <li><a class="nav-link click-sound rgb-section" onclick="switchTab('view-premium', this)"><i class="fa-solid fa-gem"></i> Premium Tiers</a></li>
+                <li><a class="nav-link click-sound rgb-section" onclick="switchTab('view-ai', this)"><i class="fa-solid fa-robot ai-link"></i> AuthenShadows AI</a></li>
+                <li><a class="nav-link click-sound rgb-section" onclick="switchTab('view-about', this)"><i class="fa-solid fa-globe"></i> About Us</a></li>
+            </ul>
+
+            <button class="logout-btn click-sound rgb-section" onclick="handleLogout()">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                <span>Logout</span>
+            </button>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div class="search-bar rgb-section">
+                    <i class="fa-solid fa-search" style="color: var(--accent-blue)"></i>
+                    <input type="text" id="global-search" placeholder="Search crypto, currency, market price..." oninput="handleSearch(this.value)">
+                </div>
+
+                <div class="topbar-right">
+                    <button class="icon-btn click-sound rgb-section" onclick="toggleWireframe()" title="Toggle Wireframe Mode">
+                        <i class="fa-solid fa-pen-ruler"></i>
+                    </button>
+                    <button class="icon-btn click-sound rgb-section" id="theme-toggle" title="Toggle Light/Dark Theme">
+                        <i class="fa-solid fa-sun" id="theme-icon"></i>
+                    </button>
+                    
+                    <button class="icon-btn click-sound rgb-section" onclick="toggleDropdown('msg-drop')">
+                        <i class="fa-regular fa-comment-dots"></i>
+                        <span class="badge">2</span>
+                    </button>
+                    <div class="dropdown-menu" id="msg-drop">
+                        <div class="dropdown-header">Recent Messages</div>
+                        <div class="dropdown-item click-sound">
+                            <img src="https://i.pravatar.cc/150?img=32" alt="Avatar">
+                            <div class="dropdown-item-content">
+                                <h4>Sarah Crypto</h4>
+                                <p>Did you check the ETH pump today?</p>
+                            </div>
+                        </div>
+                        <div class="dropdown-item click-sound">
+                            <img src="https://i.pravatar.cc/150?img=68" alt="Avatar">
+                            <div class="dropdown-item-content">
+                                <h4>Trader Joe</h4>
+                                <p>OpenCV project integration done.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="icon-btn click-sound rgb-section" onclick="toggleDropdown('notif-drop')">
+                        <i class="fa-regular fa-bell"></i>
+                        <span class="badge" style="background: var(--accent-blue); color: black;">3</span>
+                    </button>
+                    <div class="dropdown-menu" id="notif-drop">
+                        <div class="dropdown-header">Notifications</div>
+                        <div class="dropdown-item click-sound">
+                            <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(0, 255, 102, 0.2); color: #00ff66; display: flex; align-items: center; justify-content: center; font-size: 18px;"><i class="fa-solid fa-arrow-down"></i></div>
+                            <div class="dropdown-item-content">
+                                <h4>Deposit Successful</h4>
+                                <p>You received 0.05 BTC</p>
+                            </div>
+                        </div>
+                        <div class="dropdown-item click-sound">
+                            <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(255, 0, 127, 0.2); color: #ff007f; display: flex; align-items: center; justify-content: center; font-size: 18px;"><i class="fa-solid fa-shield-halved"></i></div>
+                            <div class="dropdown-item-content">
+                                <h4>Security Alert</h4>
+                                <p>New login from Bhubaneswar, India</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div id="view-dashboard" class="view-section active">
+                <div class="header-actions">
+                    <h1>Dashboard Overview</h1>
+                    <span style="color: var(--accent-green); font-size: 14px;"><i class="fa-solid fa-circle-dot fa-fade"></i> Live System Active</span>
+                </div>
+
+                <div class="portfolio-header rgb-section click-sound">
+                    <h2 style="color: var(--text-muted); font-size: 18px; font-weight: 500;">Total Portfolio Value</h2>
+                    <h1 id="total-portfolio-display">$0.00</h1>
+                    <p style="color: var(--accent-green);"><i class="fa-solid fa-arrow-trend-up"></i> Value calculated from trade history and real-time market data.</p>
+                </div>
+
+                <div class="stat-grid" id="dashboard-live-grid">
+                    </div>
+
+                <div class="charts-grid" style="grid-template-columns: 1fr;">
+                    <div class="chart-card rgb-section click-sound">
+                        <div class="chart-header">
+                            <span>Portfolio 24-Hour Statistical Analysis</span>
+                            <div style="display: flex; gap: 15px; font-size: 13px;">
+                                <span style="color: var(--accent-green)">High: <strong id="stat-high">$0.00</strong></span>
+                                <span style="color: var(--accent-red)">Low: <strong id="stat-low">$0.00</strong></span>
+                                <span style="color: var(--accent-blue)">Avg: <strong id="stat-avg">$0.00</strong></span>
+                            </div>
+                        </div>
+                        <canvas id="mainDashboardChart" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-market" class="view-section">
+                <div class="header-actions">
+                    <h1>Live Cryptocurrency Prices</h1>
+                    <span style="color: var(--text-muted); font-size: 14px;">Real-time Market Data</span>
+                </div>
+                
+                <div class="market-table-container rgb-section">
+                    <table class="market-table">
+                        <thead>
+                            <tr>
+                                <th>Asset</th>
+                                <th>Price (USD)</th>
+                                <th>24h Change</th>
+                                <th>Market Cap</th>
+                                <th>1-Year Analysis</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="crypto-table-body">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="view-stats" class="view-section">
+                <div class="header-actions">
+                    <h1>Categorized Stats & Analysis</h1>
+                </div>
+
+                <div class="analysis-controls rgb-section">
+                    <span style="color: var(--text-muted);">Select Cryptocurrency to Analyze:</span>
+                    <select id="coin-selector" class="crypto-selector click-sound" onchange="updateCategorizedCharts()">
+                        <option value="bitcoin">Bitcoin (BTC)</option>
+                        <option value="ethereum">Ethereum (ETH)</option>
+                        <option value="solana">Solana (SOL)</option>
+                        <option value="ripple">Ripple (XRP)</option>
+                    </select>
+                </div>
+
+                <div class="charts-grid-split">
+                    <div class="chart-card rgb-section click-sound">
+                        <div class="chart-header"><span id="analysis-title-1">Price History</span></div>
+                        <canvas id="analysisLineChart" height="220"></canvas>
+                    </div>
+                    <div class="chart-card rgb-section click-sound">
+                        <div class="chart-header"><span>Market Holder Distribution</span></div>
+                        <div style="height: 220px; display: flex; justify-content: center;"><canvas id="analysisPieChart"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="charts-grid-split">
+                    <div class="chart-card rgb-section click-sound">
+                        <div class="chart-header"><span>Weekly Volatility Range (High/Low)</span></div>
+                        <canvas id="analysisCandleChart" height="220"></canvas>
+                    </div>
+                    <div class="chart-card rgb-section click-sound">
+                        <div class="chart-header"><span>Core Fundamentals</span></div>
+                        <div style="height: 220px; display: flex; justify-content: center;"><canvas id="analysisRadarChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-wallet" class="view-section">
+                <div class="header-actions">
+                    <h1>Web3 Wallet Integration</h1>
+                </div>
+                
+                <div class="wallet-container">
+                    <div class="chart-card rgb-section click-sound" style="text-align: center; padding: 40px 20px;">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask Logo" style="width: 120px; margin-bottom: 25px;">
+                        <h2 id="wallet-status-title" style="margin-bottom: 10px;">MetaMask Disconnected</h2>
+                        <p id="wallet-status-desc" style="color: var(--text-muted); margin-bottom: 30px; font-size: 14px;">Bind your Web3 wallet to enable direct blockchain transactions and smart contract execution.</p>
+                        
+                        <button id="btn-connect-mm" class="action-btn click-sound" onclick="connectRealMetaMask()">Connect MetaMask</button>
+                        
+                        <div id="wallet-active-info" style="display: none; text-align: left; margin-top: 30px; padding: 20px; background: rgba(0, 240, 255, 0.05); border-radius: 12px; border: 1px solid var(--accent-blue);">
+                            <p style="margin-bottom: 15px;"><strong style="color: var(--accent-blue); display:block; margin-bottom:5px;">Connected Public Address:</strong> <span id="mm-address" style="font-family: monospace; font-size: 13px; word-break: break-all;"></span></p>
+                            <p><strong style="color: var(--accent-blue); display:block; margin-bottom:5px;">Network Balance:</strong> <span id="mm-balance" style="font-size: 20px; font-weight: bold; color: var(--text-main);">0.0000</span> ETH</p>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card rgb-section click-sound">
+                        <h3 style="color: var(--accent-purple); margin-bottom: 20px; font-size: 20px;">📚 Guidelines to Bind Account</h3>
+                        <ul class="about-list" style="line-height: 2;">
+                            <li><i class="fa-solid fa-download" style="color: var(--accent-blue);"></i> <strong>Step 1:</strong> Ensure you have the <a href="https://metamask.io/" target="_blank" style="color: var(--accent-green); text-decoration: none;">MetaMask Browser Extension</a> installed.</li>
+                            <li><i class="fa-solid fa-lock" style="color: var(--accent-blue);"></i> <strong>Step 2:</strong> Log into your MetaMask account.</li>
+                            <li><i class="fa-solid fa-link" style="color: var(--accent-blue);"></i> <strong>Step 3:</strong> Click the "Connect MetaMask" button on the left panel.</li>
+                            <li><i class="fa-solid fa-signature" style="color: var(--accent-blue);"></i> <strong>Step 4:</strong> A prompt will appear. Approve the connection to bind your wallet to AuthenChain.</li>
+                            <li style="margin-top: 15px; padding: 15px; background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--accent-red); border-radius: 0 10px 10px 0;"><i class="fa-solid fa-shield-halved" style="color: var(--accent-red);"></i> <strong style="color: var(--accent-red);">Security Note:</strong> AuthenChain operates via read-only access for your balance and address. We will <b>never</b> ask for your private keys or 12-word seed phrase.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-apps" class="view-section">
+                <div class="header-actions">
+                    <h1>Connected Indian & Global Apps</h1>
+                </div>
+                <div class="apps-grid">
+                    <div class="app-card rgb-section click-sound">
+                        <div class="app-logo" style="background: #FCD535; color: black;"><i class="fa-solid fa-diamond"></i></div>
+                        <h3>Binance</h3>
+                        <p>Global crypto exchange leader.</p>
+                        <button class="app-btn">Launch App</button>
+                    </div>
+                    <div class="app-card rgb-section click-sound">
+                        <div class="app-logo" style="background: #111111; border: 2px solid #333;"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <h3>Delta Exchange</h3>
+                        <p>Options & Futures trading.</p>
+                        <button class="app-btn">Launch App</button>
+                    </div>
+                    <div class="app-card rgb-section click-sound">
+                        <div class="app-logo" style="background: #0052FF;"><i class="fa-solid fa-c"></i></div>
+                        <h3>CoinDCX</h3>
+                        <p>India's safest crypto exchange.</p>
+                        <button class="app-btn">Launch App</button>
+                    </div>
+                    <div class="app-card rgb-section click-sound">
+                        <div class="app-logo" style="background: #103F68;"><i class="fa-solid fa-lion"></i></div>
+                        <h3>Crypto.com</h3>
+                        <p>Trade with zero fees & get cards.</p>
+                        <button class="app-btn">Launch App</button>
+                    </div>
+                    <div class="app-card rgb-section click-sound">
+                        <div class="app-logo" style="background: #1D4ED8;"><i class="fa-solid fa-w"></i></div>
+                        <h3>WazirX</h3>
+                        <p>India's most trusted exchange.</p>
+                        <button class="app-btn">Launch App</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-premium" class="view-section">
+                <div class="header-actions" style="justify-content: center;">
+                    <h1>Choose Your Subscription Plan</h1>
+                </div>
+
+                <div class="pricing-grid">
+                    <div class="price-card rgb-section click-sound">
+                        <div class="price-header">
+                            <h3>Basic</h3>
+                            <div class="price-amount">$9<span>/mo</span></div>
+                        </div>
+                        <ul class="price-features">
+                            <li><i class="fa-solid fa-check"></i> Basic Portfolio Tracking</li>
+                            <li><i class="fa-solid fa-check"></i> Connect 2 Exchanges</li>
+                            <li><i class="fa-solid fa-check"></i> Daily Market Updates</li>
+                            <li style="color: var(--text-muted);"><i class="fa-solid fa-xmark" style="color: var(--text-muted)"></i> No API Access</li>
+                        </ul>
+                        <button class="price-btn btn-outline" onclick="openPaymentModal('Basic', '9.00')">Pay via Card / Txn</button>
+                    </div>
+
+                    <div class="price-card featured rgb-section click-sound">
+                        <div class="badge-pro">MOST POPULAR</div>
+                        <div class="price-header">
+                            <h3 style="color: var(--accent-blue);">PRO</h3>
+                            <div class="price-amount">$29<span>/mo</span></div>
+                        </div>
+                        <ul class="price-features">
+                            <li><i class="fa-solid fa-check"></i> Advanced Charting Tools</li>
+                            <li><i class="fa-solid fa-check"></i> Connect Unlimited Exchanges</li>
+                            <li><i class="fa-solid fa-check"></i> Real-time Alerts via SMS</li>
+                            <li><i class="fa-solid fa-check"></i> Full API Access (100k req/mo)</li>
+                        </ul>
+                        <button class="price-btn btn-filled" onclick="openPaymentModal('Pro', '29.00')">Pay via Card / Txn</button>
+                    </div>
+
+                    <div class="price-card rgb-section click-sound">
+                        <div class="price-header">
+                            <h3 style="color: var(--accent-yellow);">LEGENDS</h3>
+                            <div class="price-amount">$99<span>/mo</span></div>
+                        </div>
+                        <ul class="price-features">
+                            <li><i class="fa-solid fa-check"></i> Everything in PRO</li>
+                            <li><i class="fa-solid fa-check"></i> Institutional Grade Data</li>
+                            <li><i class="fa-solid fa-check"></i> Whale Wallet Tracking</li>
+                            <li><i class="fa-solid fa-check"></i> 24/7 Dedicated Manager</li>
+                        </ul>
+                        <button class="price-btn btn-outline" style="border-color: var(--accent-yellow); color: var(--accent-yellow);" onclick="openPaymentModal('Legends', '99.00')">Pay via Card / Txn</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-ai" class="view-section">
+                <div class="header-actions">
+                    <h1><i class="fa-solid fa-robot" style="color:var(--accent-purple);"></i> AuthenShadows AI</h1>
+                    <span style="color: var(--accent-purple); font-size: 14px;"><i class="fa-solid fa-circle-dot fa-fade"></i> Neural Net Active</span>
+                </div>
+                
+                <div class="chat-container rgb-section">
+                    <div class="chat-messages" id="ai-chat-box">
+                        <div class="msg ai-bot"><i class="fa-solid fa-microchip"></i> Greetings, user. I am AuthenShadows, your advanced AI analytics engine. I can assist you with trading strategies, market analysis, or MetaMask troubleshooting. How may I optimize your portfolio today?</div>
+                    </div>
+                    <div class="ai-suggestions">
+                        <div class="ai-chip click-sound" onclick="fillAIInput('Analyze BTC trend')"><i class="fa-solid fa-chart-line"></i> Analyze BTC trend</div>
+                        <div class="ai-chip click-sound" onclick="fillAIInput('How do I connect MetaMask?')"><i class="fa-brands fa-ethereum"></i> Connect MetaMask</div>
+                        <div class="ai-chip click-sound" onclick="fillAIInput('Should I buy Solana now?')"><i class="fa-solid fa-bolt"></i> Buy Solana?</div>
+                        <div class="ai-chip click-sound" onclick="fillAIInput('Explain my portfolio risk')"><i class="fa-solid fa-shield-halved"></i> Portfolio Risk</div>
+                    </div>
+                    <div class="chat-input-area">
+                        <input type="text" id="ai-input" placeholder="Query AuthenShadows..." onkeypress="handleAIEnter(event)">
+                        <button class="chat-send-btn click-sound" onclick="sendAIMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-about" class="view-section">
+                <div class="about-container rgb-section click-sound">
+                    <img src="kanojo-okarishimasu-rent-a-girlfriend.gif" alt="AuthenChain Mascot" class="about-gif">
+
+                    <div class="about-section" style="text-align: center;">
+                        <h2 style="justify-content: center; font-size: 32px; color: var(--text-main);">🌐 About Us</h2>
+                        <h3 style="color: var(--accent-blue); font-size: 20px;">🚀 Welcome to AuthenChain</h3>
+                        <p style="font-size: 16px;">AuthenChain is an advanced blockchain-powered ecosystem designed as the ultimate portal and secure digital wallet for Blockchain Initiatives, Web3 applications, and Cryptocurrency management.</p>
+                        <p style="font-size: 16px;">We are building a future where digital ownership, financial freedom, and decentralized identity become accessible to everyone. AuthenChain combines innovation, security, and transparency to provide users with a trusted environment for managing digital assets and blockchain authentication.</p>
+                    </div>
+
+                    <div class="about-section">
+                        <h2>💡 Our goal:</h2>
+                        <p>To simplify blockchain technology while delivering enterprise-grade security and seamless user experience.</p>
+                    </div>
+
+                    <div class="about-section">
+                        <h2>🌍 Our Mission</h2>
+                        <p>To empower individuals, developers, and organizations with a secure decentralized platform that enables trusted transactions, digital asset protection, and blockchain adoption worldwide.</p>
+                    </div>
+
+                    <div class="about-section">
+                        <h2>🔮 Our Vision</h2>
+                        <p>To become a globally recognized blockchain ecosystem driving innovation in Web3, DeFi, and decentralized digital infrastructure, creating a smarter and more secure digital economy.</p>
+                    </div>
+
+                    <div class="about-section">
+                        <h2>🔐 What We Offer</h2>
+                        <ul class="about-list">
+                            <li>✨ Secure Multi-Chain Crypto Wallet</li>
+                            <li>✨ Blockchain Authentication Portal</li>
+                            <li>✨ Digital Asset Management</li>
+                            <li>✨ Smart Contract Integration</li>
+                            <li>✨ Decentralized Identity Protection</li>
+                            <li>✨ Web3 & Blockchain Initiatives Hub</li>
+                        </ul>
+                        <p style="margin-top: 15px; font-weight: bold;">AuthenChain serves as a bridge between traditional digital systems and next-generation decentralized technologies.</p>
+                    </div>
+
+                    <div class="about-section">
+                        <h2>🏆 Meet the Authen Legenders</h2>
+                        <p>Our strength lies in our people — the Authen Legenders. A passionate collective of blockchain engineers, cybersecurity specialists, developers, researchers, and innovators working together to shape the decentralized future.</p>
+                        
+                        <div class="leadership-box">
+                            <h3>👨‍💼 Leadership</h3>
+                            
+                            <div class="leader-card">
+                                <img src="ayanokoji.jpg" alt="CEO Ashirbad Biswal" class="leader-img">
+                                <div class="leader-info">
+                                    <h4>🌟 CEO — Ashirbad Biswal</h4>
+                                    <p>A visionary engineer and blockchain innovator leading AuthenChain with a mission to create secure and scalable decentralized platforms. His leadership focuses on technological excellence, innovation, and global blockchain adoption.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="leader-card">
+                                <img src="IMG_20251230_091747.jpg" alt="Co-Founder Abhinav Biswal" class="leader-img">
+                                <div class="leader-info">
+                                    <h4>🤝 Co-Founder — Abhinav Biswal</h4>
+                                    <p>A strategic thinker and technology enthusiast responsible for ecosystem development, operational strategy, and expansion of AuthenChain’s blockchain initiatives.</p>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="about-section">
+                        <h2>🛡️ Privacy & Security Commitment</h2>
+                        <p>At AuthenChain, user trust comes first.</p>
+                        <ul class="about-list">
+                            <li>🔒 End-to-end encryption</li>
+                            <li>🔒 Secure wallet authentication</li>
+                            <li>🔒 User-controlled digital ownership</li>
+                            <li>🔒 Data privacy protection standards</li>
+                        </ul>
+                        <p style="margin-top: 10px;">We believe privacy is not an option — it is a fundamental right.</p>
+                    </div>
+
+                    <div class="about-section" style="text-align: center; border-top: 1px solid var(--border-color); padding-top: 30px; margin-top: 30px;">
+                        <h2 style="justify-content: center;">🌟 Our Promise</h2>
+                        <p style="font-weight: bold; color: var(--accent-blue); font-size: 18px; margin-bottom: 20px;">✅ Innovation First | ✅ Security Always | ✅ Transparency Everywhere | ✅ Community Driven Growth</p>
+                        <h3 style="font-size: 24px;">🚀 AuthenChain</h3>
+                        <p style="color: var(--text-muted);">Empowering Trust • Securing Digital Ownership • Building the Blockchain Future</p>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // --- 1. Audio System (Coin Drop Effect) ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function playCoinSound() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(1200, audioCtx.currentTime); 
+            osc.frequency.exponentialRampToValueAtTime(1800, audioCtx.currentTime + 0.1); 
+            
+            gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.2);
+        }
+
+        document.addEventListener('click', function(e) {
+            if(e.target.closest('.click-sound')) {
+                playCoinSound();
+            }
+            const rgbSection = e.target.closest('.rgb-section');
+            if (rgbSection) {
+                rgbSection.classList.remove('rgb-active');
+                void rgbSection.offsetWidth; 
+                rgbSection.classList.add('rgb-active');
+            }
+        });
+
+        // Wireframe Toggle
+        function toggleWireframe() {
+            document.body.classList.toggle('wireframe-mode');
+        }
+
+        // --- 2. Live Portfolio Engine & Data ---
+        let userPortfolio = {
+            usdBalance: 150000.00,
+            holdings: { 'bitcoin': 0.5, 'ethereum': 4.2, 'solana': 150, 'ripple': 2000, 'binance': 10 },
+            history: Array.from({length: 24}, () => 140000 + (Math.random() * 20000)),
+            timeLabels: Array.from({length: 24}, (_, i) => `${i.toString().padStart(2, '0')}:00`)
+        };
+
+        const cryptoMarketData = [
+            { id: 'bitcoin', symbol: 'BTC', name: 'Bitcoin', price: 64230.12, change: 2.5, mcap: '$1.2T', year: '+120.4%', icon: 'fa-bitcoin', color: '#f59e0b' },
+            { id: 'ethereum', symbol: 'ETH', name: 'Ethereum', price: 3450.80, change: -1.2, mcap: '$410B', year: '+85.2%', icon: 'fa-ethereum', color: '#8b5cf6' },
+            { id: 'solana', symbol: 'SOL', name: 'Solana', price: 145.20, change: 5.6, mcap: '$65B', year: '+340.1%', icon: 'fa-stripe-s', color: '#00ff66' },
+            { id: 'ripple', symbol: 'XRP', name: 'Ripple', price: 0.58, change: 0.4, mcap: '$32B', year: '+12.5%', icon: 'fa-xing', color: '#00f0ff' },
+            { id: 'binance', symbol: 'BNB', name: 'Binance Coin', price: 590.40, change: 1.8, mcap: '$88B', year: '+60.3%', icon: 'fa-diamond', color: '#fcd535' }
+        ];
+
+        setInterval(() => {
+            if(document.getElementById('dashboard-layout').classList.contains('hidden')) return;
+
+            cryptoMarketData.forEach(coin => {
+                const fluctuation = 1 + ((Math.random() - 0.5) * 0.01); 
+                coin.price = coin.price * fluctuation;
+                coin.change = parseFloat((coin.change + ((Math.random() - 0.5) * 0.5)).toFixed(2));
+            });
+
+            renderMarketTable(cryptoMarketData, true);
+            renderLiveDashboard();
+            updateTotalPortfolioValue();
+        }, 3000); 
+
+        function updateTotalPortfolioValue() {
+            let totalValue = userPortfolio.usdBalance;
+            cryptoMarketData.forEach(coin => {
+                if(userPortfolio.holdings[coin.id]) {
+                    totalValue += userPortfolio.holdings[coin.id] * coin.price;
+                }
+            });
+
+            document.getElementById('total-portfolio-display').textContent = '$' + totalValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+            if(activeCharts.main) {
+                const now = new Date();
+                const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0');
+
+                userPortfolio.timeLabels.push(timeStr);
+                userPortfolio.history.push(totalValue);
+                
+                if(userPortfolio.timeLabels.length > 24) {
+                    userPortfolio.timeLabels.shift();
+                    userPortfolio.history.shift();
+                }
+
+                activeCharts.main.data.labels = userPortfolio.timeLabels;
+                activeCharts.main.data.datasets[0].data = userPortfolio.history;
+                activeCharts.main.update();
+
+                const maxVal = Math.max(...userPortfolio.history);
+                const minVal = Math.min(...userPortfolio.history);
+                const avgVal = userPortfolio.history.reduce((a,b) => a+b, 0) / userPortfolio.history.length;
+
+                document.getElementById('stat-high').textContent = '$' + maxVal.toLocaleString('en-US', {maximumFractionDigits: 0});
+                document.getElementById('stat-low').textContent = '$' + minVal.toLocaleString('en-US', {maximumFractionDigits: 0});
+                document.getElementById('stat-avg').textContent = '$' + avgVal.toLocaleString('en-US', {maximumFractionDigits: 0});
+            }
+        }
+
+        function renderLiveDashboard() {
+            const grid = document.getElementById('dashboard-live-grid');
+            if(!document.getElementById('view-dashboard').classList.contains('active')) return;
+
+            grid.innerHTML = '';
+            cryptoMarketData.forEach(coin => {
+                const holding = userPortfolio.holdings[coin.id] || 0;
+                const holdingValue = holding * coin.price;
+                const isPositive = coin.change >= 0;
+                const changeColor = isPositive ? 'var(--accent-green)' : 'var(--accent-red)';
+                const changeIcon = isPositive ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down';
+
+                grid.innerHTML += `
+                    <div class="stat-card click-sound rgb-section" onclick="openTradeModal('${coin.id}')">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                            <div class="stat-icon" style="background: ${coin.color}; color: black; margin:0;"><i class="fa-brands ${coin.icon}"></i></div>
+                            <div style="text-align: right;">
+                                <span style="color: var(--text-muted); font-size: 11px; text-transform: uppercase;">Your Holdings</span><br>
+                                <strong style="font-size: 14px;">${holding.toFixed(4)} ${coin.symbol}</strong>
+                            </div>
+                        </div>
+                        <h2>$${coin.price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h2>
+                        <div style="display: flex; justify-content: space-between; font-size: 13px; align-items: center; margin-top: 10px;">
+                            <p style="color: ${changeColor}; margin:0;"><i class="fa-solid ${changeIcon}"></i> ${Math.abs(coin.change).toFixed(2)}%</p>
+                            <span style="color: var(--text-muted); font-weight: 500;">Val: $${holdingValue.toLocaleString('en-US', {maximumFractionDigits: 2})}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // --- 3. Wallet (MetaMask) Integration Logic ---
+        async function connectRealMetaMask() {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    const account = accounts[0];
+                    document.getElementById('mm-address').textContent = account;
+                    
+                    document.getElementById('wallet-status-title').textContent = "MetaMask Connected";
+                    document.getElementById('wallet-status-title').style.color = "var(--accent-green)";
+                    document.getElementById('wallet-status-desc').textContent = "Your Web3 wallet is actively bound to AuthenChain.";
+                    
+                    try {
+                        const balance = await window.ethereum.request({ method: 'eth_getBalance', params: [account, 'latest'] });
+                        const ethBalance = (parseInt(balance, 16) / Math.pow(10, 18)).toFixed(4);
+                        document.getElementById('mm-balance').textContent = ethBalance;
+                    } catch(balError) {
+                        document.getElementById('mm-balance').textContent = "Error fetching";
+                    }
+
+                    document.getElementById('btn-connect-mm').style.display = 'none';
+                    document.getElementById('wallet-active-info').style.display = 'block';
+                    
+                } catch (error) {
+                    console.error("MetaMask Error:", error);
+                    alert("Connection failed or was rejected by the user.");
+                }
+            } else {
+                alert("MetaMask extension not detected! Please install it from metamask.io to bind your Web3 wallet.");
+            }
+        }
+
+        // --- 4. Advanced Payment Portal Logic ---
+        function openPaymentModal(planName, price) {
+            document.getElementById('checkout-plan-name').textContent = planName;
+            document.getElementById('checkout-plan-price').textContent = '$' + price;
+            
+            document.getElementById('pay-step-1').style.display = 'block';
+            document.getElementById('pay-step-otp').style.display = 'none';
+            document.getElementById('pay-step-processing').style.display = 'none';
+            document.getElementById('pay-step-success').style.display = 'none';
+            document.getElementById('icon-success').style.display = 'none';
+            
+            document.getElementById('payment-modal').classList.add('active');
+        }
+
+        function processCardDetails() {
+            document.getElementById('pay-step-1').style.display = 'none';
+            document.getElementById('pay-step-otp').style.display = 'block';
+        }
+
+        function verifyOTP() {
+            document.getElementById('pay-step-otp').style.display = 'none';
+            document.getElementById('pay-step-processing').style.display = 'block';
+            
+            setTimeout(() => {
+                document.getElementById('pay-step-processing').style.display = 'none';
+                document.getElementById('pay-step-success').style.display = 'block';
+                document.getElementById('icon-success').style.display = 'inline-block';
+                
+                playCoinSound(); setTimeout(playCoinSound, 150);
+            }, 2000);
+        }
+
+        function closePaymentModal() {
+            document.getElementById('payment-modal').classList.remove('active');
+        }
+
+        // --- 5. ADVANCED TRADE EXECUTION ENGINE LOGIC ---
+        let currentTradeCoin = null;
+
+        function openTradeModal(coinId) {
+            currentTradeCoin = cryptoMarketData.find(c => c.id === coinId);
+            if(!currentTradeCoin) return;
+
+            document.getElementById('tm-icon').className = `coin-icon fa-brands ${currentTradeCoin.icon}`;
+            document.getElementById('tm-icon').style.background = currentTradeCoin.color;
+            document.getElementById('tm-name').textContent = currentTradeCoin.name;
+            document.getElementById('tm-symbol').textContent = currentTradeCoin.symbol;
+            document.getElementById('tm-symbol-est').textContent = currentTradeCoin.symbol;
+            
+            document.getElementById('tm-price').textContent = '$' + currentTradeCoin.price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('tm-balance').textContent = '$' + userPortfolio.usdBalance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            const isPositive = currentTradeCoin.change >= 0;
+            const changeColor = isPositive ? 'var(--accent-green)' : 'var(--accent-red)';
+            const changeIcon = isPositive ? 'fa-caret-up' : 'fa-caret-down';
+            document.getElementById('tm-change').innerHTML = `<span style="color: ${changeColor};"><i class="fa-solid ${changeIcon}"></i> ${Math.abs(currentTradeCoin.change).toFixed(2)}%</span>`;
+            
+            document.getElementById('tm-mcap').textContent = currentTradeCoin.mcap;
+            
+            document.getElementById('trade-amount-input').value = '';
+            document.getElementById('trade-estimate').textContent = '0.00000';
+            
+            document.getElementById('trade-step-details').style.display = 'block';
+            document.getElementById('trade-step-processing').style.display = 'none';
+            document.getElementById('trade-step-success').style.display = 'none';
+            document.getElementById('trade-icon-success').style.display = 'none';
+
+            document.getElementById('trade-modal').classList.add('active');
+        }
+
+        function calculateTradeShares() {
+            if(!currentTradeCoin) return;
+            const amountUsd = parseFloat(document.getElementById('trade-amount-input').value) || 0;
+            const estimatedShares = amountUsd / currentTradeCoin.price;
+            document.getElementById('trade-estimate').textContent = estimatedShares.toFixed(5);
+        }
+
+        function executeTradeProcess() {
+            const amountUsd = parseFloat(document.getElementById('trade-amount-input').value) || 0;
+            if(amountUsd <= 0 || amountUsd > userPortfolio.usdBalance) {
+                alert("Invalid amount. Please ensure you have sufficient USD balance to execute this trade.");
+                return;
+            }
+
+            document.getElementById('trade-step-details').style.display = 'none';
+            document.getElementById('trade-step-processing').style.display = 'block';
+
+            setTimeout(() => {
+                const sharesReceived = amountUsd / currentTradeCoin.price;
+                userPortfolio.usdBalance -= amountUsd;
+                if(!userPortfolio.holdings[currentTradeCoin.id]) userPortfolio.holdings[currentTradeCoin.id] = 0;
+                userPortfolio.holdings[currentTradeCoin.id] += sharesReceived;
+                
+                updateTotalPortfolioValue();
+
+                document.getElementById('trade-step-processing').style.display = 'none';
+                document.getElementById('trade-step-success').style.display = 'block';
+                document.getElementById('trade-icon-success').style.display = 'inline-block';
+                
+                playCoinSound(); setTimeout(playCoinSound, 150);
+                
+                renderLiveDashboard();
+            }, 2500); 
+        }
+
+        function closeTradeModal() {
+            document.getElementById('trade-modal').classList.remove('active');
+        }
+
+        // --- 6. Tab Switching Logic ---
+        function switchTab(viewId, navElement) {
+            document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            
+            document.getElementById(viewId).classList.add('active');
+            if(navElement) navElement.classList.add('active');
+
+            if(viewId === 'view-dashboard') renderLiveDashboard();
+        }
+
+        // --- 7. Dropdowns ---
+        function toggleDropdown(id) {
+            const drop = document.getElementById(id);
+            const isShowing = drop.classList.contains('show');
+            document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.remove('show'));
+            if (!isShowing) drop.classList.add('show');
+        }
+        window.onclick = function(event) {
+            if (!event.target.closest('.icon-btn') && !event.target.closest('.dropdown-menu')) {
+                document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.remove('show'));
+            }
+        }
+
+        document.getElementById('profile-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    document.getElementById('profile-pic').src = event.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // --- 8. Auth Logic ---
+        function handleLogin(event) {
+            event.preventDefault();
+            const emailInput = document.getElementById('email').value;
+            let name = "Ashirbad Biswal";
+            if(!emailInput.toLowerCase().includes('ashirbad') && emailInput.includes('@')) {
+                name = emailInput.split('@')[0];
+            }
+            
+            document.getElementById('userDisplayName').textContent = name;
+            document.getElementById('userDisplayEmail').textContent = emailInput;
+
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('dashboard-layout').classList.remove('hidden');
+            
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            renderMarketTable(cryptoMarketData);
+            renderLiveDashboard();
+            initDashboardChart();
+            updateTotalPortfolioValue();
+            updateCategorizedCharts(); 
+        }
+
+        function handleLogout() {
+            document.getElementById('dashboard-layout').classList.add('hidden');
+            document.getElementById('login-view').classList.remove('hidden');
+            document.getElementById('password').value = '';
+        }
+
+        // --- 9. MARKET TABLE LOGIC ---
+        function renderMarketTable(data, isLiveTick = false) {
+            const tbody = document.getElementById('crypto-table-body');
+            let rowsHtml = '';
+            
+            data.forEach(coin => {
+                const isPositive = coin.change >= 0;
+                const changeColor = isPositive ? 'var(--accent-green)' : 'var(--accent-red)';
+                const changeIcon = isPositive ? 'fa-caret-up' : 'fa-caret-down';
+                const rowClass = isLiveTick ? (Math.random() > 0.5 ? 'flash-up' : 'flash-down') : '';
+
+                rowsHtml += `
+                    <tr class="${rowClass}">
+                        <td>
+                            <div class="coin-cell">
+                                <div class="coin-icon" style="background: ${coin.color};"><i class="fa-brands ${coin.icon}"></i></div>
+                                <strong>${coin.name}</strong> <span class="coin-symbol">${coin.symbol}</span>
+                            </div>
+                        </td>
+                        <td>$${coin.price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td style="color: ${changeColor}; font-weight: bold;"><i class="fa-solid ${changeIcon}"></i> ${Math.abs(coin.change).toFixed(2)}%</td>
+                        <td>${coin.mcap}</td>
+                        <td style="color: var(--accent-blue);">${coin.year}</td>
+                        <td><button class="trade-btn click-sound rgb-section" onclick="openTradeModal('${coin.id}')">Trade</button></td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = rowsHtml;
+            
+            if(isLiveTick) {
+                setTimeout(() => {
+                    document.querySelectorAll('.market-table tr').forEach(tr => {
+                        tr.classList.remove('flash-up', 'flash-down');
+                    });
+                }, 1000);
+            }
+        }
+
+        function handleSearch(term) {
+            term = term.toLowerCase();
+            if(document.getElementById('view-market').classList.contains('active') === false) {
+                switchTab('view-market', document.querySelectorAll('.nav-link')[1]);
+            }
+            const filtered = cryptoMarketData.filter(c => 
+                c.name.toLowerCase().includes(term) || 
+                c.symbol.toLowerCase().includes(term) ||
+                c.price.toString().includes(term)
+            );
+            renderMarketTable(filtered);
+        }
+
+        // --- 10. AI Chat System ---
+        function appendMsg(boxId, text, type) {
+            const box = document.getElementById(boxId);
+            const icon = type === 'ai-bot' ? '<i class="fa-solid fa-microchip"></i>' : '';
+            box.innerHTML += `<div class="msg ${type}">${icon} ${text}</div>`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function fillAIInput(text) { 
+            document.getElementById('ai-input').value = text; 
+            document.getElementById('ai-input').focus();
+        }
+
+        function sendAIMessage() {
+            const input = document.getElementById('ai-input');
+            const txt = input.value.trim();
+            if(!txt) return;
+            
+            playCoinSound();
+            appendMsg('ai-chat-box', txt, 'user');
+            input.value = '';
+            
+            // Show typing indicator
+            const box = document.getElementById('ai-chat-box');
+            const typingId = 'typing-' + Date.now();
+            box.innerHTML += `<div class="msg ai-bot" id="${typingId}"><i class="fa-solid fa-microchip fa-fade"></i>Processing...</div>`;
+            box.scrollTop = box.scrollHeight;
+
+            setTimeout(() => {
+                document.getElementById(typingId).remove();
+                playCoinSound();
+                let reply = "";
+                const lowerTxt = txt.toLowerCase();
+                
+                if(lowerTxt.includes('btc') || lowerTxt.includes('bitcoin') || lowerTxt.includes('trend')) {
+                    reply = "<strong>BTC Analysis:</strong> Bitcoin's macro structure shows strong accumulation around $64k. RSI is neutral. I recommend holding your current position and looking for entries if it drops below $62k.";
+                } else if(lowerTxt.includes('metamask') || lowerTxt.includes('wallet')) {
+                    reply = "<strong>MetaMask Help:</strong> To connect MetaMask, navigate to the 'Wallet (MetaMask)' tab on the left sidebar and click 'Connect MetaMask'. Make sure you have the browser extension installed and unlocked.";
+                } else if(lowerTxt.includes('sol') || lowerTxt.includes('solana')) {
+                    reply = "<strong>SOL Analysis:</strong> Solana is showing high momentum (+5.6% 24h). It's in a bullish breakout phase. A short-term trade could yield 5-8% profit, but ensure you set strict stop-losses.";
+                } else if(lowerTxt.includes('risk') || lowerTxt.includes('portfolio')) {
+                    reply = "<strong>Risk Assessment:</strong> Your portfolio is currently well-diversified. However, keeping some assets in stablecoins (USDT/USDC) can help mitigate sudden market downturns. Monitor your ETH/BTC ratio.";
+                } else {
+                    reply = "Based on my real-time cryptographic algorithms, ensuring portfolio diversification is optimal. Always monitor live stats before executing trades. Need specific coin analysis?";
+                }
+                appendMsg('ai-chat-box', reply, 'ai-bot');
+            }, 1500);
+        }
+        function handleAIEnter(e) { if(e.key === 'Enter') sendAIMessage(); }
+
+        // --- 11. CHART SYSTEM ---
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const root = document.documentElement;
+        let activeCharts = {};
+
+        function getChartColors() {
+            const isLight = root.getAttribute('data-theme') === 'light';
+            return {
+                text: isLight ? '#64748b' : '#94a3b8',
+                grid: isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)'
+            };
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            if (root.getAttribute('data-theme') === 'light') {
+                root.removeAttribute('data-theme');
+                themeIcon.className = 'fa-solid fa-sun';
+            } else {
+                root.setAttribute('data-theme', 'light');
+                themeIcon.className = 'fa-solid fa-moon';
+            }
+            updateChartTheme();
+        });
+
+        function initDashboardChart() {
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            const colors = getChartColors();
+            Chart.defaults.color = colors.text;
+
+            const ctxMain = document.getElementById('mainDashboardChart').getContext('2d');
+            const grad = ctxMain.createLinearGradient(0, 0, 0, 400);
+            grad.addColorStop(0, 'rgba(0, 240, 255, 0.8)'); 
+            grad.addColorStop(0.5, 'rgba(176, 38, 255, 0.5)'); 
+            grad.addColorStop(1, 'rgba(0, 240, 255, 0.0)'); 
+
+            if(activeCharts.main) activeCharts.main.destroy();
+            activeCharts.main = new Chart(ctxMain, {
+                type: 'line',
+                data: {
+                    labels: userPortfolio.timeLabels,
+                    datasets: [{ 
+                        label: 'Portfolio Value (24H)', 
+                        data: userPortfolio.history, 
+                        borderColor: '#00f0ff', 
+                        backgroundColor: grad, 
+                        borderWidth: 4, 
+                        tension: 0.4, 
+                        fill: true, 
+                        pointRadius: 4, 
+                        pointBackgroundColor: '#ff007f',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: colors.grid }, ticks: { color: colors.text } }, y: { grid: { color: colors.grid, borderDash: [5,5] }, ticks: { color: colors.text } } } }
+            });
+        }
+
+        const analysisDataDB = {
+            'bitcoin': { color: '#f59e0b', hist: [50, 52, 48, 55, 59, 62, 64], candle: [[48, 52], [50, 55], [45, 49], [53, 58], [55, 60], [60, 65]], radar: [90, 80, 70, 95, 85] },
+            'ethereum': { color: '#8b5cf6', hist: [2.2, 2.5, 2.3, 2.8, 3.1, 3.0, 3.4], candle: [[2.1, 2.4], [2.3, 2.6], [2.2, 2.5], [2.7, 3.0], [2.9, 3.2], [3.2, 3.5]], radar: [85, 95, 80, 80, 90] },
+            'solana': { color: '#00ff66', hist: [0.8, 0.9, 1.1, 1.0, 1.3, 1.2, 1.4], candle: [[0.7, 0.9], [0.8, 1.0], [1.0, 1.2], [0.9, 1.1], [1.2, 1.4], [1.3, 1.5]], radar: [70, 75, 95, 60, 80] },
+            'ripple': { color: '#00f0ff', hist: [0.5, 0.52, 0.48, 0.55, 0.54, 0.57, 0.58], candle: [[0.45, 0.52], [0.48, 0.55], [0.46, 0.51], [0.52, 0.58], [0.53, 0.56], [0.55, 0.60]], radar: [60, 50, 85, 90, 65] }
+        };
+
+        function updateCategorizedCharts() {
+            const coin = document.getElementById('coin-selector').value;
+            const data = analysisDataDB[coin];
+            const colors = getChartColors();
+            
+            document.getElementById('analysis-title-1').textContent = `${coin.toUpperCase()} Price History`;
+
+            ['catLine', 'catPie', 'catCandle', 'catRadar'].forEach(key => { if(activeCharts[key]) activeCharts[key].destroy(); });
+
+            activeCharts.catLine = new Chart(document.getElementById('analysisLineChart').getContext('2d'), {
+                type: 'line',
+                data: { labels: ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7'], datasets: [{ label: `${coin} Price`, data: data.hist, borderColor: data.color, borderWidth: 3, tension: 0.3, pointRadius: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { color: colors.grid } } } }
+            });
+
+            activeCharts.catPie = new Chart(document.getElementById('analysisPieChart').getContext('2d'), {
+                type: 'doughnut',
+                data: { labels: ['Retail', 'Institutions', 'Whales', 'Exchanges'], datasets: [{ data: [40, 25, 20, 15], backgroundColor: [data.color, '#b026ff', '#00f0ff', '#ff007f'], borderWidth: 0, hoverOffset: 5 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: colors.text } } } }
+            });
+
+            activeCharts.catCandle = new Chart(document.getElementById('analysisCandleChart').getContext('2d'), {
+                type: 'bar',
+                data: { labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], datasets: [{ label: 'High/Low', data: data.candle, backgroundColor: data.color, borderRadius: 5, barPercentage: 0.5 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { color: colors.grid } } } }
+            });
+
+            activeCharts.catRadar = new Chart(document.getElementById('analysisRadarChart').getContext('2d'), {
+                type: 'radar',
+                data: { labels: ['Momentum', 'Utility', 'Volume', 'Community', 'Security'], datasets: [{ label: `${coin} Score`, data: data.radar, backgroundColor: `${data.color}40`, borderColor: data.color, pointBackgroundColor: data.color }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { r: { angleLines: { color: colors.grid }, grid: { color: colors.grid }, pointLabels: { color: colors.text } } }, plugins: { legend: { display: false } } }
+            });
+        }
+
+        function updateChartTheme() {
+            const colors = getChartColors();
+            Chart.defaults.color = colors.text;
+            Object.values(activeCharts).forEach(chart => {
+                if(chart.options.scales) {
+                    if(chart.options.scales.x && chart.options.scales.x.grid) chart.options.scales.x.grid.color = colors.grid;
+                    if(chart.options.scales.y && chart.options.scales.y.grid) chart.options.scales.y.grid.color = colors.grid;
+                    if(chart.options.scales.r) { chart.options.scales.r.angleLines.color = colors.grid; chart.options.scales.r.grid.color = colors.grid; chart.options.scales.r.pointLabels.color = colors.text; }
+                }
+                if(chart.options.plugins && chart.options.plugins.legend.labels) chart.options.plugins.legend.labels.color = colors.text;
+                chart.update();
+            });
+        }
+    </script>
+</body>
+</html>
